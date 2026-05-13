@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Desafios de Física | Xarope Edition</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #020617;
+            --card: rgba(15, 23, 42, 0.8);
+            --primary: #00f2ff;
+            --secondary: #7000ff;
+            --accent: #ff007a;
+            --success: #10b981;
+            --danger: #ef4444;
+            --text: #f1f5f9;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Rajdhani', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow-x: hidden;
+            background-image: 
+                radial-gradient(circle at 20% 30%, rgba(112, 0, 255, 0.15) 0%, transparent 40%),
+                radial-gradient(circle at 80% 70%, rgba(0, 242, 255, 0.1) 0%, transparent 40%);
+        }
+
+        /* Scanline effect */
+        body::after {
+            content: "";
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.1) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.03));
+            background-size: 100% 3px, 3px 100%;
+            pointer-events: none;
+            z-index: 100;
+        }
+
+        .container {
+            width: 90%;
+            max-width: 900px;
+            background: var(--card);
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(0, 242, 255, 0.2);
+            border-radius: 20px;
+            padding: 40px;
+            position: relative;
+            box-shadow: 0 0 40px rgba(0, 0, 0, 0.5), inset 0 0 20px rgba(0, 242, 255, 0.05);
+        }
+
+        h1 {
+            font-family: 'Orbitron', sans-serif;
+            text-transform: uppercase;
+            letter-spacing: 4px;
+            background: linear-gradient(to right, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-weight: 900;
+            text-align: center;
+            margin-bottom: 10px;
+        }
+
+        .creator-tag {
+            text-align: center;
+            font-size: 0.8rem;
+            color: var(--accent);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 30px;
+        }
+
+        /* HUD */
+        .hud {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+            gap: 15px;
+            margin-bottom: 30px;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 15px;
+            border-radius: 12px;
+            border-bottom: 2px solid var(--secondary);
+        }
+
+        .hud-item { text-align: center; font-weight: 700; font-size: 1.1rem; }
+        .hud-label { display: block; font-size: 0.7rem; color: var(--primary); text-transform: uppercase; }
+
+        .progress-bar {
+            height: 6px;
+            background: #1e293b;
+            border-radius: 3px;
+            margin-bottom: 30px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, var(--secondary), var(--primary));
+            box-shadow: 0 0 10px var(--primary);
+            transition: 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        /* Question & Buttons */
+        .question { font-size: 1.6rem; font-weight: 600; margin-bottom: 30px; line-height: 1.3; }
+
+        .options { display: grid; gap: 12px; }
+
+        .option {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 16px 24px;
+            border-radius: 10px;
+            color: var(--text);
+            font-size: 1.1rem;
+            text-align: left;
+            cursor: pointer;
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .option:hover {
+            background: rgba(0, 242, 255, 0.1);
+            border-color: var(--primary);
+            transform: translateX(10px);
+        }
+
+        .option.correct { background: var(--success); border-color: #fff; color: white; }
+        .option.wrong { background: var(--danger); border-color: #fff; }
+
+        .btn-action {
+            width: 100%;
+            padding: 20px;
+            margin-top: 20px;
+            border: none;
+            border-radius: 10px;
+            background: linear-gradient(45deg, var(--secondary), var(--accent));
+            color: white;
+            font-family: 'Orbitron', sans-serif;
+            font-weight: 700;
+            cursor: pointer;
+            text-transform: uppercase;
+            box-shadow: 0 4px 15px rgba(112, 0, 255, 0.3);
+        }
+
+        .btn-action:hover { filter: brightness(1.2); transform: translateY(-2px); }
+
+        #explanation {
+            margin-top: 20px;
+            padding: 15px;
+            border-left: 4px solid var(--primary);
+            background: rgba(0, 242, 255, 0.05);
+            display: none;
+        }
+
+        .hidden { display: none; }
+
+        /* Footer */
+        footer {
+            position: absolute;
+            bottom: -50px;
+            width: 100%;
+            text-align: center;
+            font-size: 0.9rem;
+            opacity: 0.6;
+        }
+
+        @keyframes pulse-timer {
+            0% { color: var(--text); }
+            50% { color: var(--danger); text-shadow: 0 0 10px var(--danger); }
+            100% { color: var(--text); }
+        }
+        .critical { animation: pulse-timer 0.5s infinite; }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div id="start-screen">
+            <h1>Desafios de Física</h1>
+            <p class="creator-tag">By: Equipe Xarope</p>
+            <div style="text-align: center; margin-bottom: 30px;">
+                <p>Prepare-se para uma jornada pelos mistérios do universo.</p>
+                <p>20 Questões | 3 Vidas | Dificuldade Progressiva</p>
+            </div>
+            <button class="btn-action" onclick="initGame()">Iniciar Protocolo</button>
+        </div>
+
+        <div id="game-screen" class="hidden">
+            <div class="hud">
+                <div class="hud-item"><span class="hud-label">Fase</span><span id="h-level">1/20</span></div>
+                <div class="hud-item"><span class="hud-label">Score</span><span id="h-score">0</span></div>
+                <div class="hud-item"><span class="hud-label">Vidas</span><span id="h-lives">❤️❤️❤️</span></div>
+                <div class="hud-item"><span class="hud-label">Tempo</span><span id="h-timer">20</span>s</div>
+            </div>
+
+            <div class="progress-bar"><div id="progress-fill" class="progress-fill"></div></div>
+
+            <div id="question-container">
+                <p id="q-category" style="color: var(--primary); font-size: 0.8rem; text-transform: uppercase; margin-bottom: 10px;">Mecânica</p>
+                <h2 class="question" id="q-text">Carregando questão...</h2>
+                <div class="options" id="q-options"></div>
+                <div id="explanation"></div>
+                <button id="next-btn" class="btn-action hidden">Próxima Fase</button>
+            </div>
+        </div>
+
+        <div id="end-screen" class="hidden" style="text-align: center;">
+            <h1 id="end-title">Fim de Missão</h1>
+            <p class="creator-tag" style="margin-bottom: 10px;">Projeto Xarope</p>
+            <div style="font-size: 4rem; font-weight: 900; color: var(--primary); margin: 20px 0;" id="final-score">0</div>
+            <p id="end-rank" style="font-size: 1.5rem; margin-bottom: 30px;"></p>
+            <button class="btn-action" onclick="location.reload()">Reiniciar Sistema</button>
+        </div>
+
+        <footer>Desenvolvido por Criadores de Xarope &copy; 2024</footer>
+    </div>
+
+    <audio id="sfx-correct" src="https://assets.mixkit.co/sfx/preview/mixkit-digital-quick-master-click-1611.mp3"></audio>
+    <audio id="sfx-wrong" src="https://assets.mixkit.co/sfx/preview/mixkit-wrong-answer-fail-notification-946.mp3"></audio>
+    <audio id="bg-music" loop src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-8.mp3"></audio>
+
+    <script>
+        const state = {
+            score: 0,
+            currentIdx: 0,
+            lives: 3,
+            timeLeft: 20,
+            timerFunc: null,
+            questionsSolved: [],
+            totalQuestions: 20
+        };
+
+        const db = [
+            // FÁCIL
+            { q: "Qual a primeira lei de Newton?", cat: "Dinâmica", options: ["Inércia", "Ação e Reação", "Gravitação", "F=m.a"], correct: 0, exp: "A Lei da Inércia diz que um corpo tende a manter seu estado de repouso ou movimento." },
+            { q: "Unidade de medida de frequência no SI:", cat: "Ondulatória", options: ["Joules", "Hertz", "Watts", "Newtons"], correct: 1, exp: "Hertz (Hz) mede ciclos por segundo." },
+            { q: "O que o velocímetro de um carro marca?", cat: "Cinemática", options: ["Velocidade Média", "Aceleração", "Velocidade Instantânea", "Deslocamento"], correct: 2, exp: "Ele marca o módulo da velocidade naquele exato momento." },
+            { q: "Calor é uma forma de:", cat: "Termologia", options: ["Temperatura", "Trabalho", "Energia em trânsito", "Pressão"], correct: 2, exp: "Calor é energia térmica se movendo entre corpos com temperaturas diferentes." },
+            
+            // MÉDIO
+            { q: "No vácuo, qual cai primeiro: uma pena ou uma bola de ferro?", cat: "Gravidade", options: ["Bola de ferro", "Pena", "Ambos juntos", "Nenhum cai"], correct: 2, exp: "No vácuo não há resistência do ar, logo a aceleração da gravidade é igual para ambos." },
+            { q: "Espelhos convexos formam imagens:", cat: "Óptica", options: ["Reais e maiores", "Virtuais e menores", "Virtuais e maiores", "Reais e invertidas"], correct: 1, exp: "Espelhos convexos (como de segurança) sempre formam imagens virtuais, direitas e menores." },
+            { q: "A resistência elétrica é medida em:", cat: "Eletricidade", options: ["Volts", "Amperes", "Ohms", "Coulombs"], correct: 2, exp: "A unidade é o Ohm (Ω), definida pela Lei de Ohm." },
+            { q: "Um som agudo possui:", cat: "Acústica", options: ["Alta frequência", "Baixa frequência", "Grande amplitude", "Baixa velocidade"], correct: 0, exp: "Altura do som está ligada à frequência. Agudo = Alta frequência." },
+
+            // DIFÍCIL
+            { q: "O que acontece com a pressão se o volume de um gás diminui (T constante)?", cat: "Gases", options: ["Diminui", "Aumenta", "Fica igual", "Zera"], correct: 1, exp: "Pela Lei de Boyle, pressão e volume são inversamente proporcionais." },
+            { q: "O efeito Doppler explica a mudança de:", cat: "Ondulatória", options: ["Timbre", "Frequência percebida", "Intensidade", "Velocidade da luz"], correct: 1, exp: "É a mudança aparente na frequência devido ao movimento relativo entre fonte e observador." },
+            { q: "Qual a cor da luz visível com menor comprimento de onda?", cat: "Óptica", options: ["Vermelho", "Verde", "Violeta", "Amarelo"], correct: 2, exp: "O violeta tem o menor comprimento de onda e a maior frequência do espectro visível." },
+            { q: "A segunda lei da Termodinâmica trata da:", cat: "Termodinâmica", options: ["Conservação de massa", "Entropia", "Zero absoluto", "Empuxo"], correct: 1, exp: "A entropia do universo tende sempre a aumentar." },
+            { q: "Quem propôs o modelo atômico dos 'níveis de energia'?", cat: "Física Moderna", options: ["Dalton", "Bohr", "Rutherford", "Einstein"], correct: 1, exp: "Niels Bohr propôs que elétrons orbitam em níveis de energia quantizados." },
+            { q: "O que é um 'Ano-Luz'?", cat: "Astronomia", options: ["Tempo", "Distância", "Velocidade", "Brilho"], correct: 1, exp: "É a distância que a luz percorre em um ano (aprox. 9,5 trilhões de km)." },
+            { q: "A velocidade da luz é aproximadamente:", cat: "Física Moderna", options: ["300.000 km/s", "300.000 km/h", "150.000 m/s", "1 bilhão km/s"], correct: 0, exp: "C = 3x10^8 m/s ou 300 mil km/s." },
+            { q: "Em um circuito em série, a corrente é:", cat: "Eletrodinâmica", options: ["Igual em todos resistores", "Dividida entre eles", "Sempre zero", "Infinita"], correct: 0, exp: "No circuito série, há apenas um caminho para os elétrons." },
+            { q: "Qual o valor da constante gravitacional na Terra (aprox)?", cat: "Mecânica", options: ["5 m/s²", "10 m/s²", "9.8 km/h", "0 m/s²"], correct: 1, exp: "Usamos g ≈ 9.8 ou 10 m/s² para simplificar cálculos." },
+            { q: "O fenômeno da luz voltando ao meio de origem ao bater numa superfície:", cat: "Óptica", options: ["Refração", "Reflexão", "Difração", "Interferência"], correct: 1, exp: "Reflexão é o 'bate e volta' da luz." },
+            { q: "O que determina a cor de uma estrela?", cat: "Astrofísica", options: ["Tamanho", "Temperatura superficial", "Distância", "Idade apenas"], correct: 1, exp: "Estrelas azuis são mais quentes, vermelhas são mais frias." },
+            { q: "A unidade de Potência é:", cat: "Trabalho e Energia", options: ["Watt", "Joule", "Pascal", "Newton"], correct: 0, exp: "1 Watt = 1 Joule por segundo." }
+        ];
+
+        function initGame() {
+            document.getElementById('start-screen').classList.add('hidden');
+            document.getElementById('game-screen').classList.remove('hidden');
+            document.getElementById('bg-music').volume = 0.2;
+            document.getElementById('bg-music').play();
+            loadQuestion();
+        }
+
+        function loadQuestion() {
+            resetState();
+            const q = db[state.currentIdx];
+            
+            document.getElementById('q-text').innerText = q.q;
+            document.getElementById('q-category').innerText = q.cat;
+            document.getElementById('h-level').innerText = `${state.currentIdx + 1}/${state.totalQuestions}`;
+            
+            const optionsBox = document.getElementById('q-options');
+            optionsBox.innerHTML = '';
+            
+            q.options.forEach((opt, i) => {
+                const btn = document.createElement('button');
+                btn.className = 'option';
+                btn.innerText = opt;
+                btn.onclick = () => checkAnswer(i, q.correct, q.exp);
+                optionsBox.appendChild(btn);
+            });
+
+            startTimer();
+            updateProgressBar();
+        }
+
+        function checkAnswer(selected, correct, exp) {
+            clearInterval(state.timerFunc);
+            const btns = document.querySelectorAll('.option');
+            btns.forEach(b => b.disabled = true);
+
+            if (selected === correct) {
+                btns[selected].classList.add('correct');
+                state.score += (10 + state.timeLeft);
+                document.getElementById('sfx-correct').play();
+            } else {
+                btns[selected].classList.add('wrong');
+                btns[correct].classList.add('correct');
+                state.lives--;
+                document.getElementById('sfx-wrong').play();
+            }
+
+            document.getElementById('h-score').innerText = state.score;
+            document.getElementById('h-lives').innerText = '❤️'.repeat(state.lives);
+            
+            const expDiv = document.getElementById('explanation');
+            expDiv.innerHTML = `<strong>Explicação:</strong> ${exp}`;
+            expDiv.style.display = 'block';
+            
+            document.getElementById('next-btn').classList.remove('hidden');
+
+            if (state.lives <= 0) endGame("SISTEMA CRITICAMENTE COMPROMETIDO");
+        }
+
+        function startTimer() {
+            state.timeLeft = 20;
+            const timerEl = document.getElementById('h-timer');
+            timerEl.innerText = state.timeLeft;
+            timerEl.classList.remove('critical');
+
+            state.timerFunc = setInterval(() => {
+                state.timeLeft--;
+                timerEl.innerText = state.timeLeft;
+                if(state.timeLeft <= 5) timerEl.classList.add('critical');
+                
+                if (state.timeLeft <= 0) {
+                    clearInterval(state.timerFunc);
+                    state.lives--;
+                    document.getElementById('h-lives').innerText = '❤️'.repeat(state.lives);
+                    if(state.lives > 0) nextQuestion();
+                    else endGame("TEMPO ESGOTADO");
+                }
+            }, 1000);
+        }
+
+        function nextQuestion() {
+            state.currentIdx++;
+            if (state.currentIdx < state.totalQuestions && state.lives > 0) {
+                loadQuestion();
+            } else {
+                endGame("MISSÃO CONCLUÍDA");
+            }
+        }
+
+        document.getElementById('next-btn').onclick = nextQuestion;
+
+        function resetState() {
+            document.getElementById('explanation').style.display = 'none';
+            document.getElementById('next-btn').classList.add('hidden');
+        }
+
+        function updateProgressBar() {
+            const percent = (state.currentIdx / state.totalQuestions) * 100;
+            document.getElementById('progress-fill').style.width = percent + '%';
+        }
+
+        function endGame(title) {
+            clearInterval(state.timerFunc);
+            document.getElementById('game-screen').classList.add('hidden');
+            document.getElementById('end-screen').classList.remove('hidden');
+            document.getElementById('end-title').innerText = title;
+            document.getElementById('final-score').innerText = state.score;
+            
+            let rank = "Recruta Xarope";
+            if(state.score > 150) rank = "Cientista de Elite";
+            if(state.score > 300) rank = "Mestre das Galáxias";
+            
+            document.getElementById('end-rank').innerText = rank;
+        }
+    </script>
+</body>
+</html>
